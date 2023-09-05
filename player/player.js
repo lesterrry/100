@@ -9,7 +9,7 @@
  */
 
 // Cache references to DOM elements.
-var elms = ['track', 'timer', 'duration', 'playBtn', 'pauseBtn', 'prevBtn', 'nextBtn', 'playlistBtn', 'volumeBtn', 'progress', 'bar', 'wave', 'loading', 'playlist', 'list', 'volume', 'barEmpty', 'barFull', 'sliderBtn'];
+var elms = ['track', 'timer', 'duration', 'playBtn', 'pauseBtn', 'prevBtn', 'nextBtn', 'progress', 'loading'];
 elms.forEach(function(elm) {
   window[elm] = document.getElementById(elm);
 });
@@ -24,18 +24,8 @@ var Player = function(playlist) {
   this.index = 0;
 
   // Display the title of the first track.
-  track.innerHTML = '1. ' + playlist[0].title;
+  track.innerHTML = playlist[0].title;
 
-  // Setup the playlist display.
-  playlist.forEach(function(song) {
-    var div = document.createElement('div');
-    div.className = 'list-song';
-    div.innerHTML = song.title;
-    div.onclick = function() {
-      player.skipTo(playlist.indexOf(song));
-    };
-    list.appendChild(div);
-  });
 };
 Player.prototype = {
   /**
@@ -64,27 +54,14 @@ Player.prototype = {
           // Start updating the progress of the track.
           requestAnimationFrame(self.step.bind(self));
 
-          bar.style.display = 'none';
           pauseBtn.style.display = 'block';
         },
         onload: function() {
-          // Start the wave animation.
-          wave.container.style.display = 'block';
-          bar.style.display = 'none';
-          loading.style.display = 'none';
+          // loading.style.display = 'none';
         },
         onend: function() {
           // Stop the wave animation.
-          bar.style.display = 'block';
           self.skip('next');
-        },
-        onpause: function() {
-          // Stop the wave animation.
-          bar.style.display = 'block';
-        },
-        onstop: function() {
-          // Stop the wave animation.
-          bar.style.display = 'block';
         },
         onseek: function() {
           // Start updating the progress of the track.
@@ -97,7 +74,7 @@ Player.prototype = {
     sound.play();
 
     // Update the track display.
-    track.innerHTML = (index + 1) + '. ' + data.title;
+    track.innerHTML = data.title;
 
     // Show the pause button.
     if (sound.state() === 'loaded') {
@@ -174,38 +151,6 @@ Player.prototype = {
   },
 
   /**
-   * Set the volume and update the volume slider display.
-   * @param  {Number} val Volume between 0 and 1.
-   */
-  volume: function(val) {
-    var self = this;
-
-    // Update the global volume (affecting all Howls).
-    Howler.volume(val);
-
-    // Update the display on the slider.
-    var barWidth = (val * 90) / 100;
-    barFull.style.width = (barWidth * 100) + '%';
-    sliderBtn.style.left = (window.innerWidth * barWidth + window.innerWidth * 0.05 - 25) + 'px';
-  },
-
-  /**
-   * Seek to a new position in the currently playing track.
-   * @param  {Number} per Percentage through the song to skip.
-   */
-  seek: function(per) {
-    var self = this;
-
-    // Get the Howl we want to manipulate.
-    var sound = self.playlist[self.index].howl;
-
-    // Convert the percent into a seek position.
-    if (sound.playing()) {
-      sound.seek(sound.duration() * per);
-    }
-  },
-
-  /**
    * The step called within requestAnimationFrame to update the playback position.
    */
   step: function() {
@@ -223,19 +168,6 @@ Player.prototype = {
     if (sound.playing()) {
       requestAnimationFrame(self.step.bind(self));
     }
-  },
-
-  /**
-   * Toggle the playlist display on/off.
-   */
-  togglePlaylist: function() {
-    var self = this;
-    var display = (playlist.style.display === 'block') ? 'none' : 'block';
-
-    setTimeout(function() {
-      playlist.style.display = display;
-    }, (display === 'block') ? 0 : 500);
-    playlist.className = (display === 'block') ? 'fadein' : 'fadeout';
   },
 
   /**
@@ -264,7 +196,17 @@ Player.prototype = {
   }
 };
 
+const shuffleArray = (array) => {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+
 // Setup our new audio player class and pass it the playlist.
+shuffleArray(LIST)
 var player = new Player(LIST);
 
 // Bind our player controls.
@@ -283,46 +225,3 @@ nextBtn.addEventListener('click', function() {
 waveform.addEventListener('click', function(event) {
   player.seek(event.clientX / window.innerWidth);
 });
-playlistBtn.addEventListener('click', function() {
-  player.togglePlaylist();
-});
-playlist.addEventListener('click', function() {
-  player.togglePlaylist();
-});
-volumeBtn.addEventListener('click', function() {
-  player.toggleVolume();
-});
-volume.addEventListener('click', function() {
-  player.toggleVolume();
-});
-
-// Setup the event listeners to enable dragging of volume slider.
-barEmpty.addEventListener('click', function(event) {
-  var per = event.layerX / parseFloat(barEmpty.scrollWidth);
-  player.volume(per);
-});
-sliderBtn.addEventListener('mousedown', function() {
-  window.sliderDown = true;
-});
-sliderBtn.addEventListener('touchstart', function() {
-  window.sliderDown = true;
-});
-volume.addEventListener('mouseup', function() {
-  window.sliderDown = false;
-});
-volume.addEventListener('touchend', function() {
-  window.sliderDown = false;
-});
-
-var move = function(event) {
-  if (window.sliderDown) {
-    var x = event.clientX || event.touches[0].clientX;
-    var startX = window.innerWidth * 0.05;
-    var layerX = x - startX;
-    var per = Math.min(1, Math.max(0, layerX / parseFloat(barEmpty.scrollWidth)));
-    player.volume(per);
-  }
-};
-
-volume.addEventListener('mousemove', move);
-volume.addEventListener('touchmove', move);

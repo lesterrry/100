@@ -3,7 +3,7 @@ require 'id3'
 require 'json'
 require 'iconv'
 
-CONFIRM = false
+CONFIRM = true
 
 FOLDER_PATH = '../player/lib'
 OUT_FILE_PATH = '../player/list.js'
@@ -25,7 +25,8 @@ filenames.each do |file_name|
 	mp3 = ID3::AudioFile.new(file_path)
 
 	begin
-		formatted = "#{mp3.tagID3v2['ARTIST']['text']} — #{mp3.tagID3v2['TITLE']['text']}"	
+		# formatted = "#{mp3.tagID3v2['ARTIST']['text']} — #{mp3.tagID3v2['TITLE']['text']}"
+		formatted = "#{mp3.tagID3v2['TITLE']['text']}"	
 	rescue StandardError => e
 		puts "   ERR: #{e}"
 		formatted = "Unknown"
