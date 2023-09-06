@@ -57,7 +57,7 @@ Player.prototype = {
           pauseBtn.style.display = 'block';
         },
         onload: function() {
-          // loading.style.display = 'none';
+          loading.style.display = 'none';
         },
         onend: function() {
           // Stop the wave animation.
